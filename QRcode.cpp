@@ -12,9 +12,11 @@ void writeVector(vector<int> &vec, int n) {
     }
 }
 
-int encode() {
+int encode(vector<vector<int>> &QRcode, vector<int> lb, vector<int> cb, vector<int> lt, vector<int> ct, vector<int> qb, vector<int> db) {
+    int k = 0; // num de QRcodes gerados a partir do encode
 
-    return 0;
+
+    return k;
 }
 
 void printQRcode(vector<vector<int>> QRcode, int N) {
@@ -82,8 +84,8 @@ int main() {
         vector<vector<int>> QRcode(N);
         for (int i = 0; i < N; i++)
             QRcode[i].resize(N);
-
         
+        k = encode(QRcode, lb, cb, lt, ct, qb, db);
 
         // Output ===============================================
         switch (k) {
