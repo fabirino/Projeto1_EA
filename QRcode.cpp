@@ -12,9 +12,64 @@ void writeVector(vector<int> &vec, int n) {
     }
 }
 
+// possivelmente nao funciona porque nada garante que os pixeis pretos de uma linha nao fiquem todos num so quadrante
+bool verify_quadrants(vector<int> lb, vector<int> cb, vector<int> qb) {
+    int soma = 0;
+    int size = lb.size();
+
+    // Quadrante 1 ======================================
+    for (int i = 0; i < size / 2; i++) {
+        soma += lb[i] / 2;
+    }
+
+    if (soma > qb[0] || soma > qb[1])
+        return false;
+
+    soma = 0;
+    for (int i = size / 2; i < size; i++) {
+        soma += cb[i] / 2;
+    }
+
+    if (soma > qb[0] || soma > qb[3])
+        return false;
+
+    // Quadrante 2 ======================================
+    // ja foi feito o caso das linhas
+
+    soma = 0;
+    for (int i = 0; i < size / 2; i++) {
+        soma += cb[i] / 2;
+    }
+
+    if (soma > qb[1] || soma > qb[2])
+        return false;
+
+    // Quadrante 3 ======================================
+    soma = 0;
+    for (int i = size / 2; i < size; i++) {
+        soma += lb[i] / 2;
+    }
+
+    if (soma > qb[2] || soma > qb[3])
+        return false;
+
+    // ja foi feito o caso das colunas
+
+    // Quadrante 4 ======================================
+    // ja foram feitos ambos os casos
+
+    return true;
+}
+
 int encode(vector<vector<int>> &QRcode, vector<int> lb, vector<int> cb, vector<int> lt, vector<int> ct, vector<int> qb, vector<int> db) {
     int k = 0; // num de QRcodes gerados a partir do encode
 
+    // DEFECT =============================
+    if (!verify_quadrants(lb, cb, qb))
+        return k;
+
+    // VALID / INVALID
+    k = 1;
 
     return k;
 }
@@ -55,7 +110,6 @@ void printQRcode(vector<vector<int>> QRcode, int N) {
         cout << "-";
     }
     cout << "+" << endl;
-
 }
 
 int main() {
@@ -63,7 +117,7 @@ int main() {
     cin >> num_codes;
 
     while (num_codes--) {
-        int k = 1; // usar para o num de QRcodes gerados a partir do input
+        int k; // usar para o num de QRcodes gerados a partir do input
 
         // Ler input ============================================
         int N;
@@ -84,7 +138,7 @@ int main() {
         vector<vector<int>> QRcode(N);
         for (int i = 0; i < N; i++)
             QRcode[i].resize(N);
-        
+
         k = encode(QRcode, lb, cb, lt, ct, qb, db);
 
         // Output ===============================================
