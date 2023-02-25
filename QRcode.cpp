@@ -72,16 +72,16 @@ bool verify_args() {
     for (int i = 0; i < N; i++) {
         if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
             return false;
+    }
 
-        if (i < 4) {
-            if (qb[i] < 0)
-                return false;
-        }
+    for (int i = 0; i < 4; i++) {
+        if (qb[i] < 0)
+            return false;
+    }
 
-        if (i < 2) {
-            if (db[i] < 0)
-                return false;
-        }
+    for (int i = 0; i < 2; i++) {
+        if (db[i] < 0)
+            return false;
     }
 
     return true;
@@ -161,7 +161,7 @@ void revert_pixel(int l, int c) {
         db[1]++;
 }
 
-bool encode(int l, int c, int lin) {
+bool encode(int lin, int c) {
 
     // DEFECT =============================
     // if (!verify_quadrants(lb, cb, qb))
@@ -175,7 +175,7 @@ bool encode(int l, int c, int lin) {
     }
 
     // Base case
-    if (l == N - 1 && c == N - 1) {
+    if (c == N - 1 && lin == N - 1) {
         k++;
         return true;
     }
@@ -183,17 +183,16 @@ bool encode(int l, int c, int lin) {
     // For all unvisited pixels
     // TODO: verificar o N-1, pus por causa do i+1 & j+1 mas pode nao estar a verificar o ultimo
     for (int i = 0; i < N - 1; i++) {
-        for (int j = 0; j < N - 1; j++) {
-            if (!visited[i][j]) {
-                visited[i][j] = true;
-                update_pixel(i, j);
-                if (encode(i + 1, j + 1, lin + 1))
-                    return true;
-                revert_pixel(i, j);
-                visited[i][j] = false;
-            }
+        if (!visited[lin][i]) {
+            visited[lin][i] = true;
+            update_pixel(lin, i);
+            if (encode(lin, i + 1))
+                return true;
+            revert_pixel(lin, i);
+            visited[lin][i] = false;
         }
     }
+    
     return false;
 }
 
@@ -258,7 +257,7 @@ int main() {
         visited = vector<vector<bool>>(N, (vector<bool>(N, false)));
 
         k = 0;
-        encode(0, 0, 0);
+        encode(0, 0);
 
         // Output ===============================================
         switch (k) {
