@@ -107,9 +107,6 @@ void update_pixel(int l, int c) {
             qb[0]--;
         }
     } else {
-
-
-        
         // 3 ou 4 Quadrante
         if (c < N / 2) {
             // 3Q
@@ -164,7 +161,7 @@ void revert_pixel(int l, int c) {
         db[1]++;
 }
 
-bool encode(int l, int c, int col) {
+bool encode(int l, int c, int lin) {
 
     // DEFECT =============================
     // if (!verify_quadrants(lb, cb, qb))
@@ -190,7 +187,7 @@ bool encode(int l, int c, int col) {
             if (!visited[i][j]) {
                 visited[i][j] = true;
                 update_pixel(i, j);
-                if (encode(i + 1, j + 1, col + 1))
+                if (encode(i + 1, j + 1, lin + 1))
                     return true;
                 revert_pixel(i, j);
                 visited[i][j] = false;
