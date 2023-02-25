@@ -4,6 +4,12 @@
 
 using namespace std;
 
+vector<vector<int>> QRcode;
+vector<int> lb, cb, lt, ct, qb, db;
+vector<vector<bool>> visited;
+int k; // usar para o num de QRcodes gerados a partir do input
+int N; // num linhas/ colunas do QRcode
+
 void writeVector(vector<int> &vec, int n) {
     int num;
     while (n--) {
@@ -13,7 +19,7 @@ void writeVector(vector<int> &vec, int n) {
 }
 
 // possivelmente nao funciona porque nada garante que os pixeis pretos de uma linha nao fiquem todos num so quadrante
-bool verify_quadrants(vector<int> lb, vector<int> cb, vector<int> qb) {
+bool verify_quadrants() {
     int soma = 0;
     int size = lb.size();
 
@@ -61,17 +67,134 @@ bool verify_quadrants(vector<int> lb, vector<int> cb, vector<int> qb) {
     return true;
 }
 
-int encode(vector<vector<int>> &QRcode, vector<int> lb, vector<int> cb, vector<int> lt, vector<int> ct, vector<int> qb, vector<int> db) {
-    int k = 0; // num de QRcodes gerados a partir do encode
+bool verify_args() {
+
+    for (int i = 0; i < N; i++) {
+        if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
+            return false;
+
+        if (i < 4) {
+            if (qb[i] < 0)
+                return false;
+        }
+
+        if (i < 2) {
+            if (db[i] < 0)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+void update_pixel(int l, int c) {
+    QRcode[l][c] = 1;
+
+    // Atualizar linhas/ colunas
+    lb[l]--;
+    cb[c]--;
+
+    // TODO: Atualizar transicoes
+
+    // Atualizar quadrantes
+    if (l < N / 2) {
+        // 1 ou 2 Quadrante
+        if (c < N / 2) {
+            // 2Q
+            qb[1]--;
+        } else {
+            // 1Q
+            qb[0]--;
+        }
+    } else {
+        // 3 ou 4 Quadrante
+        if (c < N / 2) {
+            // 3Q
+            qb[2]--;
+        } else {
+            // 4Q
+            qb[3]--;
+        }
+    }
+
+    // Atualizar diagonais
+    if (c == l)
+        db[0]--;
+    else if (N - l + 1 == c)
+        db[1]--;
+}
+
+void revert_pixel(int l, int c) {
+    QRcode[l][c] = 0;
+
+    // Atualizar linhas/ colunas
+    lb[l]++;
+    cb[c]++;
+
+    // TODO: Atualizar transicoes
+
+    // Atualizar quadrantes
+    if (l < N / 2) {
+        // 1 ou 2 Quadrante
+        if (c < N / 2) {
+            // 2Q
+            qb[1]++;
+        } else {
+            // 1Q
+            qb[0]++;
+        }
+    } else {
+        // 3 ou 4 Quadrante
+        if (c < N / 2) {
+            // 3Q
+            qb[2]++;
+        } else {
+            // 4Q
+            qb[3]++;
+        }
+    }
+
+    // Atualizar diagonais
+    if (c == l)
+        db[0]++;
+    else if (N - l + 1 == c)
+        db[1]++;
+}
+
+bool encode(int l, int c, int col) {
 
     // DEFECT =============================
-    if (!verify_quadrants(lb, cb, qb))
-        return k;
+    // if (!verify_quadrants(lb, cb, qb))
+    //     return k;
 
-    // VALID / INVALID
-    k = 1;
+    // VALID / INVALID ====================
 
-    return k;
+    // Rejection test
+    if (!verify_args()) {
+        return false;
+    }
+
+    // Base case
+    if (l == N - 1 && c == N - 1) {
+        k++;
+        return true;
+    }
+
+    // For all unvisited pixels
+    // TODO: verificar o N-1, pus por causa do i+1 & j+1 mas pode nao estar a verificar o ultimo
+    for (int i = 0; i < N - 1; i++) {
+        for (int j = 0; j < N - 1; j++) {
+            if (!visited[i][j]) {
+                visited[i][j] = true;
+                update_pixel(i, j);
+                if (encode(i + 1, j + 1, col + 1))
+                    return true;
+                revert_pixel(i, j);
+                visited[i][j] = false;
+            }
+        }
+    }
+    return false;
 }
 
 void printQRcode(vector<vector<int>> QRcode, int N) {
@@ -117,13 +240,9 @@ int main() {
     cin >> num_codes;
 
     while (num_codes--) {
-        int k; // usar para o num de QRcodes gerados a partir do input
 
         // Ler input ============================================
-        int N;
         cin >> N;
-
-        vector<int> lb, cb, lt, ct, qb, db;
 
         writeVector(lb, N); // 1 < x < N
         writeVector(cb, N); // 1 < x < N
@@ -135,11 +254,11 @@ int main() {
         // Encoder ==============================================
 
         // Cria um vetor N*N
-        vector<vector<int>> QRcode(N);
-        for (int i = 0; i < N; i++)
-            QRcode[i].resize(N);
+        QRcode = vector<vector<int>>(N, (vector<int>(N, 0)));
+        visited = vector<vector<bool>>(N, (vector<bool>(N, false)));
 
-        k = encode(QRcode, lb, cb, lt, ct, qb, db);
+        k = 0;
+        encode(0, 0, 0);
 
         // Output ===============================================
         switch (k) {
