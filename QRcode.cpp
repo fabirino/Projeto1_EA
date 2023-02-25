@@ -107,6 +107,9 @@ void update_pixel(int l, int c) {
             qb[0]--;
         }
     } else {
+
+
+        
         // 3 ou 4 Quadrante
         if (c < N / 2) {
             // 3Q
