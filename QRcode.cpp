@@ -87,6 +87,27 @@ bool verify_args() {
     return true;
 }
 
+bool final_verify() {
+
+    for (int i = 0; i < N; i++) {
+        if (lb[i] != 0 || cb[i] || lt[i] != 0 || ct[i] != 0) {
+            return false;
+        }
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (qb[i] != 0)
+            return false;
+    }
+
+    for (int i = 0; i < 2; i++) {
+        if (db[i] != 0)
+            return false;
+    }
+
+    return true;
+}
+
 void update_pixel(int l, int c) {
     QRcode[l][c] = 1;
 
@@ -94,7 +115,50 @@ void update_pixel(int l, int c) {
     lb[l]--;
     cb[c]--;
 
-    // TODO: Atualizar transicoes
+    // TODO: (1) Atualizar transicoes 
+    // if (l < N - 2) {
+    //     if (QRcode[l][c] != QRcode[l + 1][c])
+    //         ct[c]--;
+    // }
+
+    // if (l > 0) {
+    //     if (QRcode[l][c] != QRcode[l - 1][c])
+    //         ct[c]--;
+    // }
+    
+    if(l >= 1  && l <=N-2){ 
+        // se a primeira col estiver a 1 nao muda em nada
+        if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
+            lt[c] -=2;
+        }
+    }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
+        lt[c] --;
+    }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
+        lt[c] --;
+    }
+
+
+    if(c >= 1  && c <=N-2){ 
+        // se a primeira col estiver a 1 nao muda em nada
+        if(QRcode[l][c+1] == 0 && QRcode[l][c-1]== 0){
+            lt[l] -=2;
+        }
+    }else if(c == 0 && QRcode[l][c+1] == 0){ // primeiro
+        lt[l] --;
+    }else if(c == N-1 && QRcode[l][c-1] == 0){ // ultima 
+        lt[l] --;
+    }
+
+    // if (c < N - 2) {
+    //     if (QRcode[l][c] != QRcode[l][c + 1])
+    //         lt[l]--;
+    // }
+
+    // if (c > 0) {
+    //     if (QRcode[l][c] != QRcode[l][c - 1])
+    //         lt[l]--;
+    // }
+
 
     // Atualizar quadrantes
     if (l < N / 2) {
@@ -131,7 +195,49 @@ void revert_pixel(int l, int c) {
     lb[l]++;
     cb[c]++;
 
-    // TODO: Atualizar transicoes
+    // TODO: Atualizar transicoes [verificar se para retirar tambem e assim]
+    // if (l < N - 2) {
+    //     if (QRcode[l][c] != QRcode[l + 1][c])
+    //         ct[c]++;
+    // }
+
+    // if (l > 0) {
+    //     if (QRcode[l][c] != QRcode[l - 1][c])
+    //         ct[c]++;
+    // }
+
+    // if (c < N - 2) {
+    //     if (QRcode[l][c] != QRcode[l][c + 1])
+    //         lt[l]++;
+    // }
+
+    // if (c > 0) {
+    //     if (QRcode[l][c] != QRcode[l][c - 1])
+    //         lt[l]++;
+    // }
+
+    if(l >= 1 && l <=N-2){ 
+        // se a primeira col estiver a 1 nao muda em nada
+        if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
+            lt[c] +=2;
+        }
+    }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
+        lt[c] ++;
+    }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
+        lt[c] ++;
+    }
+
+
+    if(c >= 1  && c <=N-2){ 
+        // se a primeira col estiver a 1 nao muda em nada
+        if(QRcode[l][c+1] == 0 && QRcode[l][c-1]== 0){
+            lt[l] +=2;
+        }
+    }else if(c == 0 && QRcode[l][c+1] == 0){ // primeiro
+        lt[l] ++;
+    }else if(c == N-1 && QRcode[l][c-1] == 0){ // ultima 
+        lt[l]++;
+    }
 
     // Atualizar quadrantes
     if (l < N / 2) {
@@ -175,24 +281,31 @@ bool encode(int lin, int c) {
     }
 
     // Base case
-    if (c == N - 1 && lin == N - 1) {
+    // TODO: verificar se ha celulas por escrever
+    if (c == N - 1 && lin == N - 1 && final_verify()) {
         k++;
         return true;
     }
 
     // For all unvisited pixels
-    // TODO: verificar o N-1, pus por causa do i+1 & j+1 mas pode nao estar a verificar o ultimo
-    for (int i = 0; i < N - 1; i++) {
+    // TODO: verificar o N-1, pus por causa do i+1 mas pode nao estar a verificar o ultimo
+    for (int i = 0; i < N; i++) {
         if (!visited[lin][i]) {
             visited[lin][i] = true;
             update_pixel(lin, i);
-            if (encode(lin, i + 1))
-                return true;
+            if (i < N - 1) {
+                if (encode(lin, i + 1))
+                    return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
+            }
             revert_pixel(lin, i);
             visited[lin][i] = false;
         }
+
+        // na ultima coluna passa para a proxima linha
+        if (i == N - 1 && lin < N - 1)
+            encode(lin + 1, 0);
     }
-    
+
     return false;
 }
 
