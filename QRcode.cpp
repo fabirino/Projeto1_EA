@@ -129,12 +129,12 @@ void update_pixel(int l, int c) {
     if(l >= 1  && l <=N-2){ 
         // se a primeira col estiver a 1 nao muda em nada
         if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
-            lt[c] -=2;
+            ct[c] -=2;
         }
     }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
-        lt[c] --;
+        ct[c] --;
     }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
-        lt[c] --;
+        ct[c] --;
     }
 
 
@@ -219,12 +219,12 @@ void revert_pixel(int l, int c) {
     if(l >= 1 && l <=N-2){ 
         // se a primeira col estiver a 1 nao muda em nada
         if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
-            lt[c] +=2;
+            ct[c] +=2;
         }
     }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
-        lt[c] ++;
+        ct[c] ++;
     }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
-        lt[c] ++;
+        ct[c] ++;
     }
 
 
@@ -282,7 +282,7 @@ bool encode(int lin, int c) {
 
     // Base case
     // TODO: verificar se ha celulas por escrever
-    if (c == N - 1 && lin == N - 1 && final_verify()) {
+    if (c == N && lin == N - 1 && final_verify()) {
         k++;
         return true;
     }
@@ -293,17 +293,18 @@ bool encode(int lin, int c) {
         if (!visited[lin][i]) {
             visited[lin][i] = true;
             update_pixel(lin, i);
-            if (i < N - 1) {
+            // if (i < N - 1) { //DEBUG: Possivel seg fault aqui !!
                 if (encode(lin, i + 1))
                     return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
-            }
+            // }
             revert_pixel(lin, i);
             visited[lin][i] = false;
         }
 
         // na ultima coluna passa para a proxima linha
-        if (i == N - 1 && lin < N - 1)
-            encode(lin + 1, 0);
+        if (i == N - 1 && lin < N - 1){
+            if(encode(lin + 1, 0)) return true;
+        }
     }
 
     return false;
