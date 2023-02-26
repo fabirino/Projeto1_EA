@@ -87,6 +87,13 @@ bool verify_args() {
     return true;
 }
 
+bool verify_row(int i) {
+    if (lb[i] != 0 || lt[i] != 0)
+        return false;
+
+    return true;
+}
+
 bool final_verify() {
 
     for (int i = 0; i < N; i++) {
@@ -115,7 +122,7 @@ void update_pixel(int l, int c) {
     lb[l]--;
     cb[c]--;
 
-    // TODO: (1) Atualizar transicoes 
+    // TODO: (1) Atualizar transicoes
     // if (l < N - 2) {
     //     if (QRcode[l][c] != QRcode[l + 1][c])
     //         ct[c]--;
@@ -125,28 +132,27 @@ void update_pixel(int l, int c) {
     //     if (QRcode[l][c] != QRcode[l - 1][c])
     //         ct[c]--;
     // }
-    
-    if(l >= 1  && l <=N-2){ 
+
+    if (l >= 1 && l <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
-        if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
-            ct[c] -=2;
+        if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
+            ct[c] -= 2;
         }
-    }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
-        ct[c] --;
-    }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
-        ct[c] --;
+    } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
+        ct[c]--;
+    } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
+        ct[c]--;
     }
 
-
-    if(c >= 1  && c <=N-2){ 
+    if (c >= 1 && c <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
-        if(QRcode[l][c+1] == 0 && QRcode[l][c-1]== 0){
-            lt[l] -=2;
+        if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
+            lt[l] -= 2;
         }
-    }else if(c == 0 && QRcode[l][c+1] == 0){ // primeiro
-        lt[l] --;
-    }else if(c == N-1 && QRcode[l][c-1] == 0){ // ultima 
-        lt[l] --;
+    } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
+        lt[l]--;
+    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // ultima
+        lt[l]--;
     }
 
     // if (c < N - 2) {
@@ -158,7 +164,6 @@ void update_pixel(int l, int c) {
     //     if (QRcode[l][c] != QRcode[l][c - 1])
     //         lt[l]--;
     // }
-
 
     // Atualizar quadrantes
     if (l < N / 2) {
@@ -216,26 +221,25 @@ void revert_pixel(int l, int c) {
     //         lt[l]++;
     // }
 
-    if(l >= 1 && l <=N-2){ 
+    if (l >= 1 && l <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
-        if(QRcode[l+1][c] == 0 && QRcode[l-1][c] == 0){
-            ct[c] +=2;
+        if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
+            ct[c] += 2;
         }
-    }else if(l == 0 && QRcode[l+1][c] == 0){ // primeiro 
-        ct[c] ++;
-    }else if(l == N-1 && QRcode[l-1][c] == 0){ // ultima 
-        ct[c] ++;
+    } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
+        ct[c]++;
+    } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
+        ct[c]++;
     }
 
-
-    if(c >= 1  && c <=N-2){ 
+    if (c >= 1 && c <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
-        if(QRcode[l][c+1] == 0 && QRcode[l][c-1]== 0){
-            lt[l] +=2;
+        if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
+            lt[l] += 2;
         }
-    }else if(c == 0 && QRcode[l][c+1] == 0){ // primeiro
-        lt[l] ++;
-    }else if(c == N-1 && QRcode[l][c-1] == 0){ // ultima 
+    } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
+        lt[l]++;
+    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // ultima
         lt[l]++;
     }
 
@@ -294,16 +298,23 @@ bool encode(int lin, int c) {
             visited[lin][i] = true;
             update_pixel(lin, i);
             // if (i < N - 1) { //DEBUG: Possivel seg fault aqui !!
-                if (encode(lin, i + 1))
-                    return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
+            if (encode(lin, i + 1))
+                return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
             // }
             revert_pixel(lin, i);
             visited[lin][i] = false;
+            // if (i == N - 1 && lin < N - 1) { //TODO:ver melhor isto!!
+            //     if (verify_row(lin))
+            //         encode(lin + 1, 0);
+            //     else
+            //         return false;
+            // }
         }
 
         // na ultima coluna passa para a proxima linha
-        if (i == N - 1 && lin < N - 1){
-            if(encode(lin + 1, 0)) return true;
+        if (i == N - 1 && lin < N - 1) {
+            if (encode(lin + 1, 0))
+                return true;
         }
     }
 
