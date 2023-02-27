@@ -10,6 +10,8 @@ vector<vector<bool>> visited;
 int k; // usar para o num de QRcodes gerados a partir do input
 int N; // num linhas/ colunas do QRcode
 
+bool accept = false;
+
 void writeVector(vector<int> &vec, int n) {
     int num;
     while (n--) {
@@ -70,7 +72,8 @@ bool verify_quadrants() {
 bool verify_args() {
 
     for (int i = 0; i < N; i++) {
-        if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
+        // if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
+        if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 )
             return false;
     }
 
@@ -112,6 +115,7 @@ bool final_verify() {
             return false;
     }
 
+    accept = true;
     return true;
 }
 
@@ -137,22 +141,30 @@ void update_pixel(int l, int c) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
             ct[c] -= 2;
+        }else if (QRcode[l + 1][c] == 1 && QRcode[l - 1][c] == 1) {
+            ct[c] += 2;
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
         ct[c]--;
     } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
         ct[c]--;
+    } else if (l == N - 1 && QRcode[l - 1][c] == 1) { // ultima
+        ct[c]++;
     }
 
     if (c >= 1 && c <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
             lt[l] -= 2;
+        }else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
+            lt[l] += 2;
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
         lt[l]--;
-    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // ultima
+    } else if (c ==N - 1 && QRcode[l][c - 1] == 0) { // primeiro
         lt[l]--;
+    } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
+        lt[l]++;
     }
 
     // if (c < N - 2) {
@@ -189,7 +201,7 @@ void update_pixel(int l, int c) {
     // Atualizar diagonais
     if (c == l)
         db[0]--;
-    else if (N - l + 1 == c)
+    else if ((c + l) == (N-1))
         db[1]--;
 }
 
@@ -225,22 +237,30 @@ void revert_pixel(int l, int c) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
             ct[c] += 2;
+        } else if (QRcode[l + 1][c] == 1 && QRcode[l - 1][c] == 1) {
+            ct[c] -= 2;
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
         ct[c]++;
     } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
         ct[c]++;
+    } else if (l == N - 1 && QRcode[l - 1][c] == 1) { // ultima
+        ct[c]--;
     }
 
     if (c >= 1 && c <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
             lt[l] += 2;
+        }else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
+            lt[l] -= 2;
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
         lt[l]++;
     } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // ultima
         lt[l]++;
+    } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
+        lt[l]--;
     }
 
     // Atualizar quadrantes
@@ -267,7 +287,7 @@ void revert_pixel(int l, int c) {
     // Atualizar diagonais
     if (c == l)
         db[0]++;
-    else if (N - l + 1 == c)
+    else if ((c + l) == (N-1))
         db[1]++;
 }
 
@@ -303,18 +323,14 @@ bool encode(int lin, int c) {
             // }
             revert_pixel(lin, i);
             visited[lin][i] = false;
-            // if (i == N - 1 && lin < N - 1) { //TODO:ver melhor isto!!
-            //     if (verify_row(lin))
-            //         encode(lin + 1, 0);
-            //     else
-            //         return false;
-            // }
         }
 
         // na ultima coluna passa para a proxima linha
-        if (i == N - 1 && lin < N - 1) {
-            if (encode(lin + 1, 0))
+        if (i == N - 1 && lin < N - 1 && accept == false) {
+            if (verify_row(lin) && encode(lin + 1, 0))
                 return true;
+            else
+                    return false;
         }
     }
 
@@ -368,6 +384,7 @@ int main() {
         // Ler input ============================================
         cin >> N;
 
+        //TODO: Fazer os tais limites nas variaveis 
         writeVector(lb, N); // 1 < x < N
         writeVector(cb, N); // 1 < x < N
         writeVector(lt, N); // 1 < x < N-1
