@@ -73,8 +73,9 @@ bool verify_args() {
 
     for (int i = 0; i < N; i++) {
         // if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
-        if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 )
+        if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] < 0) || (lb[i] == 0 && lt[i] < 0) || ct[i] < -1 || lt[i] < -1) {
             return false;
+        }
     }
 
     for (int i = 0; i < 4; i++) {
@@ -90,7 +91,7 @@ bool verify_args() {
     return true;
 }
 
-bool verify_row(int i) {
+bool verify_row(int i) { // TODO: verificar quadrantes !
     if (lb[i] != 0 || lt[i] != 0)
         return false;
 
@@ -141,7 +142,7 @@ void update_pixel(int l, int c) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
             ct[c] -= 2;
-        }else if (QRcode[l + 1][c] == 1 && QRcode[l - 1][c] == 1) {
+        } else if (QRcode[l + 1][c] == 1 && QRcode[l - 1][c] == 1) {
             ct[c] += 2;
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
@@ -156,12 +157,12 @@ void update_pixel(int l, int c) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
             lt[l] -= 2;
-        }else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
+        } else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
             lt[l] += 2;
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
         lt[l]--;
-    } else if (c ==N - 1 && QRcode[l][c - 1] == 0) { // primeiro
+    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // primeiro
         lt[l]--;
     } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
         lt[l]++;
@@ -201,7 +202,7 @@ void update_pixel(int l, int c) {
     // Atualizar diagonais
     if (c == l)
         db[0]--;
-    else if ((c + l) == (N-1))
+    if ((c + l) == (N - 1))
         db[1]--;
 }
 
@@ -252,7 +253,7 @@ void revert_pixel(int l, int c) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l][c + 1] == 0 && QRcode[l][c - 1] == 0) {
             lt[l] += 2;
-        }else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
+        } else if (QRcode[l][c + 1] == 1 && QRcode[l][c - 1] == 1) {
             lt[l] -= 2;
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
@@ -287,7 +288,7 @@ void revert_pixel(int l, int c) {
     // Atualizar diagonais
     if (c == l)
         db[0]++;
-    else if ((c + l) == (N-1))
+    else if ((c + l) == (N - 1))
         db[1]++;
 }
 
@@ -310,27 +311,61 @@ bool encode(int lin, int c) {
         k++;
         return true;
     }
-
-    // For all unvisited pixels
-    // TODO: verificar o N-1, pus por causa do i+1 mas pode nao estar a verificar o ultimo
-    for (int i = 0; i < N; i++) {
-        if (!visited[lin][i]) {
-            visited[lin][i] = true;
-            update_pixel(lin, i);
-            // if (i < N - 1) { //DEBUG: Possivel seg fault aqui !!
-            if (encode(lin, i + 1))
-                return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
-            // }
-            revert_pixel(lin, i);
-            visited[lin][i] = false;
-        }
-
-        // na ultima coluna passa para a proxima linha
-        if (i == N - 1 && lin < N - 1 && accept == false) {
-            if (verify_row(lin) && encode(lin + 1, 0))
-                return true;
-            else
+    if (c == 0 && (lb[lin] == 0 || lb[lin] == N)) { // todas pretas ou todas brancas !!
+        if (lt[lin] == 0) {
+            // pinta todas de preto ou de branco
+            if (lb[lin]) {
+                for (int i = 0; i < N; i++) {
+                    visited[lin][i] = true;
+                    update_pixel(lin, i);
+                }
+            } else {
+                for (int i = 0; i < N; i++) {
+                    visited[lin][i] = true;
+                }
+            }
+            if (lin < N - 1 && accept == false) {
+                if (verify_row(lin) && encode(lin + 1, 0)) {
+                    return true;
+                } else {
+                    // reverse
                     return false;
+                }
+            } else if (lin == N - 1 && final_verify()) {
+                k++;
+                return true;
+            }
+        } else {
+            return false;
+        }
+    } else if (c == N) {
+        if (verify_row(lin) && encode(lin + 1, 0))
+            return true;
+        else
+            return false;
+    } else {
+
+        // For all unvisited pixels
+        // TODO: verificar o N-1, pus por causa do i+1 mas pode nao estar a verificar o ultimo
+        for (int i = c; i < N; i++) {
+            if (!visited[lin][i]) {
+                visited[lin][i] = true;
+                update_pixel(lin, i);
+                // if (i < N - 1) { //DEBUG: Possivel seg fault aqui !!
+                if (encode(lin, i + 1))
+                    return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
+                // }
+                revert_pixel(lin, i);
+                visited[lin][i] = false;
+            }
+
+            // na ultima coluna passa para a proxima linha
+            if (i == N - 1 && lin < N - 1 && accept == false) {
+                if (verify_row(lin) && encode(lin + 1, 0))
+                    return true;
+                else
+                    return false;
+            }
         }
     }
 
@@ -384,7 +419,7 @@ int main() {
         // Ler input ============================================
         cin >> N;
 
-        //TODO: Fazer os tais limites nas variaveis 
+        // TODO: Fazer os tais limites nas variaveis
         writeVector(lb, N); // 1 < x < N
         writeVector(cb, N); // 1 < x < N
         writeVector(lt, N); // 1 < x < N-1
@@ -399,6 +434,7 @@ int main() {
         visited = vector<vector<bool>>(N, (vector<bool>(N, false)));
 
         k = 0;
+
         encode(0, 0);
 
         // Output ===============================================
