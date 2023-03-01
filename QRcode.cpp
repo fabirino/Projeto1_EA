@@ -12,13 +12,11 @@ vector<vector<bool>> visited;
 int k; // usar para o num de QRcodes gerados a partir do input
 int N; // num linhas/ colunas do QRcode
 
-bool accept = false;
-
 void writeVector(vector<int> &vec, int n) {
     int num;
-    while (n--) {
+    for (int i = 0; i < n; i++) {
         cin >> num;
-        vec.push_back(num);
+        vec[i] = num;
     }
 }
 
@@ -96,10 +94,32 @@ bool verify_args(int lin, int c) {
     return true;
 }
 
-bool verify_row(int i) { // TODO: verificar quadrantes !
-    if (lb[i] != 0 || lt[i] != 0)
+bool verify_row(int lin) { // TODO: verificar quadrantes !
+    if (lb[lin] != 0 || lt[lin] != 0)
         return false;
+    int soma = 0;
+    if (lin == N / 2 + 1) {
+        // Ja se pode verificar o 1 e 2 quadrantes se faltam pixeis pretos
 
+        // 1Q
+        for (int i = 0; i < N / 2; i++) {
+            for (int j = N / 2; j < N; j++) {
+                soma += QRcode[i][j];
+            }
+        }
+        if (soma < qb[0])
+            return false;
+        soma = 0;
+        // 2Q
+        for (int i = 0; i < N / 2; i++) {
+            for (int j = 0; j < N / 2; j++) {
+                soma += QRcode[i][j];
+            }
+        }
+        if (soma < qb[1])
+            return false;
+
+    }
     return true;
 }
 
@@ -122,7 +142,6 @@ bool final_verify() {
     }
 
     QRcodecpy = QRcode;
-    accept = true;
     return true;
 }
 
@@ -388,6 +407,12 @@ int main() {
 
         // Ler input ============================================
         cin >> N;
+        lb = vector<int>(N);
+        cb = vector<int>(N);
+        lt = vector<int>(N);
+        ct = vector<int>(N);
+        qb = vector<int>(4);
+        db = vector<int>(2);
 
         // TODO: Fazer os tais limites nas variaveis
         writeVector(lb, N); // 1 < x < N
