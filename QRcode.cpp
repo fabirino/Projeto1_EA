@@ -71,7 +71,7 @@ bool verify_quadrants() {
 
 bool verify_args(int lin, int c) {
 
-    if (N!=c && ((N - c) < lb[lin]) || ((N - lin ) < cb[c])) { //deve de dar para otimizar mai qq cena so ns como xd !!
+    if (N != c && ((N - c) < lb[lin]) || ((N - lin) < cb[c])) { // deve de dar para otimizar mai qq cena so ns como xd !!
         return false;
     }
 
@@ -118,7 +118,6 @@ bool verify_row(int lin) { // TODO: verificar quadrantes !
         }
         if (soma < qb[1])
             return false;
-
     }
     return true;
 }
@@ -239,6 +238,8 @@ void revert_pixel(int l, int c) {
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
         ct[c]++;
+    } else if (l == 0 && QRcode[l + 1][c] == 1) { // primeiro
+        ct[c]--;
     } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
         ct[c]++;
     } else if (l == N - 1 && QRcode[l - 1][c] == 1) { // ultima
@@ -254,6 +255,8 @@ void revert_pixel(int l, int c) {
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
         lt[l]++;
+    } else if (c == 0 && QRcode[l][c + 1] == 1) { // primeiro
+        lt[l]--;
     } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // ultima
         lt[l]++;
     } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
@@ -303,11 +306,12 @@ bool encode(int lin, int c) {
 
     // Base case
     // TODO: verificar se ha celulas por escrever
-    if (c == N && lin == N - 1 && final_verify()) {
-        k++;
+    if (c == N && lin == N - 1) {
+        if (final_verify()) {
+            k++;
+        }
         return false;
-    }
-    if (c == 0 && (lb[lin] == 0 || lb[lin] == N)) { // todas pretas ou todas brancas !!
+    } else if (c == 0 && (lb[lin] == 0 || lb[lin] == N)) { // todas pretas ou todas brancas !!
         if (lt[lin] == 0) {
             // pinta todas de preto ou de branco
             if (lb[lin]) {
@@ -320,12 +324,18 @@ bool encode(int lin, int c) {
                     visited[lin][i] = true;
                 }
             }
-            if (lin < N - 1 ) {
+            if (lin < N - 1) {
                 verify_row(lin) && encode(lin + 1, 0);
-                    // reverse
-                    return false;           
-            } else if (lin == N - 1 && final_verify()) {
-                k++;
+                for (int i = 0; i < N; i++) {
+                    visited[lin][i] = false;
+                    if (QRcode[lin][i])
+                        revert_pixel(lin, i);
+                }
+                return false;
+            } else if (lin == N - 1 ) {
+                if(final_verify()){
+                  k++;  
+                }
                 return false;
             }
         } else {
@@ -348,10 +358,10 @@ bool encode(int lin, int c) {
             }
 
             // na ultima coluna passa para a proxima linha
-            if (i == N - 1 && lin < N - 1 ) {
+            if (i == N - 1 && lin < N - 1) {
                 verify_row(lin) && encode(lin + 1, 0);
                 return false;
-            }else if(lin == N-1 && i == N-1 && final_verify()){
+            } else if (lin == N - 1 && i == N - 1 && final_verify()) {
                 k++;
                 return false;
             }
