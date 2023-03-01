@@ -5,6 +5,8 @@
 using namespace std;
 
 vector<vector<int>> QRcode;
+vector<vector<int>> QRcodecpy;
+
 vector<int> lb, cb, lt, ct, qb, db;
 vector<vector<bool>> visited;
 int k; // usar para o num de QRcodes gerados a partir do input
@@ -69,11 +71,14 @@ bool verify_quadrants() {
     return true;
 }
 
-bool verify_args() {
+bool verify_args(int lin, int c) {
+
+    if (N!=c && ((N - c) < lb[lin]) || ((N - lin ) < cb[c])) { //deve de dar para otimizar mai qq cena so ns como xd !!
+        return false;
+    }
 
     for (int i = 0; i < N; i++) {
-        // if (lb[i] < 0 || cb[i] < 0 || lt[i] < 0 || ct[i] < 0)
-        if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] < 0) || (lb[i] == 0 && lt[i] < 0) || ct[i] < -1 || lt[i] < -1) {
+        if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] != 0) || (lb[i] == 0 && lt[i] != 0) || ct[i] < -1 || lt[i] < -1) {
             return false;
         }
     }
@@ -116,6 +121,7 @@ bool final_verify() {
             return false;
     }
 
+    QRcodecpy = QRcode;
     accept = true;
     return true;
 }
@@ -168,16 +174,6 @@ void update_pixel(int l, int c) {
         lt[l]++;
     }
 
-    // if (c < N - 2) {
-    //     if (QRcode[l][c] != QRcode[l][c + 1])
-    //         lt[l]--;
-    // }
-
-    // if (c > 0) {
-    //     if (QRcode[l][c] != QRcode[l][c - 1])
-    //         lt[l]--;
-    // }
-
     // Atualizar quadrantes
     if (l < N / 2) {
         // 1 ou 2 Quadrante
@@ -214,25 +210,6 @@ void revert_pixel(int l, int c) {
     cb[c]++;
 
     // TODO: Atualizar transicoes [verificar se para retirar tambem e assim]
-    // if (l < N - 2) {
-    //     if (QRcode[l][c] != QRcode[l + 1][c])
-    //         ct[c]++;
-    // }
-
-    // if (l > 0) {
-    //     if (QRcode[l][c] != QRcode[l - 1][c])
-    //         ct[c]++;
-    // }
-
-    // if (c < N - 2) {
-    //     if (QRcode[l][c] != QRcode[l][c + 1])
-    //         lt[l]++;
-    // }
-
-    // if (c > 0) {
-    //     if (QRcode[l][c] != QRcode[l][c - 1])
-    //         lt[l]++;
-    // }
 
     if (l >= 1 && l <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
@@ -301,7 +278,7 @@ bool encode(int lin, int c) {
     // VALID / INVALID ====================
 
     // Rejection test
-    if (!verify_args()) {
+    if (!verify_args(lin, c)) {
         return false;
     }
 
@@ -309,7 +286,7 @@ bool encode(int lin, int c) {
     // TODO: verificar se ha celulas por escrever
     if (c == N && lin == N - 1 && final_verify()) {
         k++;
-        return true;
+        return false;
     }
     if (c == 0 && (lb[lin] == 0 || lb[lin] == N)) { // todas pretas ou todas brancas !!
         if (lt[lin] == 0) {
@@ -324,25 +301,20 @@ bool encode(int lin, int c) {
                     visited[lin][i] = true;
                 }
             }
-            if (lin < N - 1 && accept == false) {
-                if (verify_row(lin) && encode(lin + 1, 0)) {
-                    return true;
-                } else {
+            if (lin < N - 1 ) {
+                verify_row(lin) && encode(lin + 1, 0);
                     // reverse
-                    return false;
-                }
+                    return false;           
             } else if (lin == N - 1 && final_verify()) {
                 k++;
-                return true;
+                return false;
             }
         } else {
             return false;
         }
     } else if (c == N) {
-        if (verify_row(lin) && encode(lin + 1, 0))
-            return true;
-        else
-            return false;
+        verify_row(lin) && encode(lin + 1, 0);
+        return false;
     } else {
 
         // For all unvisited pixels
@@ -351,20 +323,18 @@ bool encode(int lin, int c) {
             if (!visited[lin][i]) {
                 visited[lin][i] = true;
                 update_pixel(lin, i);
-                // if (i < N - 1) { //DEBUG: Possivel seg fault aqui !!
-                if (encode(lin, i + 1))
-                    return true; // TODO: verificar o return pois pode haver mais possibilidades [return (true || encode(proximo))]
-                // }
+                encode(lin, i + 1);
                 revert_pixel(lin, i);
                 visited[lin][i] = false;
             }
 
             // na ultima coluna passa para a proxima linha
-            if (i == N - 1 && lin < N - 1 && accept == false) {
-                if (verify_row(lin) && encode(lin + 1, 0))
-                    return true;
-                else
-                    return false;
+            if (i == N - 1 && lin < N - 1 ) {
+                verify_row(lin) && encode(lin + 1, 0);
+                return false;
+            }else if(lin == N-1 && i == N-1 && final_verify()){
+                k++;
+                return false;
             }
         }
     }
@@ -444,7 +414,7 @@ int main() {
             break;
         case 1:
             cout << "VALID: 1 QR Code generated!" << endl;
-            printQRcode(QRcode, N);
+            printQRcode(QRcodecpy, N);
             break;
         default:
             cout << "INVALID: " << k << " QR Code generated!" << endl;
