@@ -284,7 +284,7 @@ void revert_pixel(int l, int c) {
     // Atualizar diagonais
     if (c == l)
         db[0]++;
-    else if ((c + l) == (N - 1))
+    if ((c + l) == (N - 1))
         db[1]++;
 }
 
