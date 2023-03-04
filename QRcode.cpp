@@ -156,17 +156,6 @@ void update_pixel(int l, int c) {
     lb[l]--;
     cb[c]--;
 
-    // TODO: (1) Atualizar transicoes
-    // if (l < N - 2) {
-    //     if (QRcode[l][c] != QRcode[l + 1][c])
-    //         ct[c]--;
-    // }
-
-    // if (l > 0) {
-    //     if (QRcode[l][c] != QRcode[l - 1][c])
-    //         ct[c]--;
-    // }
-
     if (l >= 1 && l <= N - 2) {
         // se a primeira col estiver a 1 nao muda em nada
         if (QRcode[l + 1][c] == 0 && QRcode[l - 1][c] == 0) {
@@ -176,7 +165,9 @@ void update_pixel(int l, int c) {
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
         ct[c]--;
-    } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
+    }  else if (l == 0 && QRcode[l + 1][c] == 1) { // primeiro
+        ct[c]++;
+    }else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
         ct[c]--;
     } else if (l == N - 1 && QRcode[l - 1][c] == 1) { // ultima
         ct[c]++;
@@ -191,7 +182,9 @@ void update_pixel(int l, int c) {
         }
     } else if (c == 0 && QRcode[l][c + 1] == 0) { // primeiro
         lt[l]--;
-    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // primeiro
+    } else if (c == 0 && QRcode[l][c + 1] == 1) { // primeiro
+        lt[l]++;
+    }else if (c == N - 1 && QRcode[l][c - 1] == 0) { // primeiro
         lt[l]--;
     } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
         lt[l]++;
@@ -491,11 +484,7 @@ bool preProcess() {
 }
 
 bool encode(int lin, int c) {
-
-    // DEFECT =============================
-    // if (!verify_quadrants(lb, cb, qb))
-    //     return k;
-
+    
     // VALID / INVALID ====================
 
     // Rejection test
@@ -504,7 +493,6 @@ bool encode(int lin, int c) {
     }
 
     // Base case
-    // TODO: verificar se ha celulas por escrever
     if ((c == N || lb[lin] == 0) && lin == N - 1) {
         if (final_verify()) {
             k++;
