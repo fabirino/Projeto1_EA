@@ -488,7 +488,7 @@ bool preProcess() {
     // Caso onde ha mais pixeis na linha e existe uma coluna branca
     if (empty_col != -1) {
         for (int i = 0; i < N; i++) {
-            if (lt[i] == 1 && lb_copy[i] >= N / 2) {
+            if (lt_copy[i] == 1 && lb_copy[i] >= N / 2) {
                 if (empty_col + 1 > N / 2) {
                     // pintar a parte de cima
                     for (int j = 0; j < lb_copy[i]; j++) {
@@ -514,7 +514,7 @@ bool preProcess() {
     // Caso onde ha mais pixeis na coluna e existe uma linha branca
     if (empty_lin != -1) {
         for (int i = 0; i < N; i++) {
-            if (ct[i] == 1 && cb_copy[i] >= N / 2) {
+            if (ct_copy[i] == 1 && cb_copy[i] >= N / 2) {
                 if (empty_lin + 1 > N / 2) {
                     // pintar a parte de cima
                     for (int j = 0; j < cb_copy[i]; j++) {
