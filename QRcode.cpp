@@ -7,7 +7,7 @@ using namespace std;
 vector<vector<int>> QRcode;
 vector<vector<int>> QRcodecpy;
 
-vector<int> lb, cb, lt, ct, qb, db;
+vector<int> lb, cb, lt, ct, qb, db, lt_copy;
 vector<vector<bool>> visited;
 int k; // usar para o num de QRcodes gerados a partir do input
 int N; // num linhas/ colunas do QRcode
@@ -324,11 +324,13 @@ bool preProcess() {
 
     // TODO: Transicoes impossiveis(nao haver conjucacao entre transicoes e no cel pretas)
 
+
+
+
     // VALID =====================================================
 
     vector<int> lb_copy = lb;
     vector<int> cb_copy = cb;
-    vector<int> lt_copy = lt;
     vector<int> ct_copy = ct;
     vector<int> db_copy = db;
     vector<int> qb_copy = qb;
@@ -415,9 +417,13 @@ bool preProcess() {
     // Preencher linhas/ colunas completas
     int empty_lin = -1;
     int empty_col = -1;
+    int full_lin = -1;
+    int full_col = -1;
+
     for (int i = 0; i < N; i++) {
         // linhas
         if (lb_copy[i] == N) {
+            full_lin = i;
             if (lt_copy[i] != 0)
                 return false;
             for (int j = 0; j < N; j++) {
@@ -437,6 +443,7 @@ bool preProcess() {
 
         // colunas
         if (cb_copy[i] == N) {
+            full_col = i;
             if (ct_copy[i] != 0)
                 return false;
             for (int j = 0; j < N; j++) {
@@ -485,10 +492,10 @@ bool preProcess() {
     }
 
     // Pintar linhas que so tenham uma transicao
-    // Caso onde ha mais pixeis na linha e existe uma coluna branca
+    // Caso onde ha mais pixeis pretos na linha e existe uma coluna branca
     if (empty_col != -1) {
         for (int i = 0; i < N; i++) {
-            if (lt_copy[i] == 1 && lb_copy[i] >= N / 2) {
+            if (lt_copy[i] == 1 && lb_copy[i] > N / 2) {
                 if (empty_col + 1 > N / 2) {
                     // pintar a parte de cima
                     for (int j = 0; j < lb_copy[i]; j++) {
@@ -510,13 +517,38 @@ bool preProcess() {
         }
     }
 
+    // Caso onde ha mais pixeis pretos na linha e existe uma coluna preta
+    if (full_col != -1) {
+        for (int i = 0; i < N; i++) {
+            if (lt_copy[i] == 1 && lb_copy[i] <= N / 2) {
+                if (full_col + 1 > N / 2) {
+                    // pintar a parte da direita
+                    for (int j = N - lb_copy[i]; j < N; j++) {
+                        if (!visited[i][j]) {
+                            visited[i][j] = true;
+                            update_pixel(i, j);
+                        }
+                    }
+                } else {
+                    // pintar a parte da esquerda
+                    for (int j = 0; j < lb_copy[i]; j++) {
+                        if (!visited[i][j]) {
+                            visited[i][j] = true;
+                            update_pixel(i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Pintar colunas que so tenham uma transicao
-    // Caso onde ha mais pixeis na coluna e existe uma linha branca
+    // Caso onde ha mais pixeis pretos na coluna e existe uma linha branca
     if (empty_lin != -1) {
         for (int i = 0; i < N; i++) {
-            if (ct_copy[i] == 1 && cb_copy[i] >= N / 2) {
+            if (ct_copy[i] == 1 && cb_copy[i] > N / 2) {
                 if (empty_lin + 1 > N / 2) {
-                    // pintar a parte de cima
+                    // pintar a parte da esquerda
                     for (int j = 0; j < cb_copy[i]; j++) {
                         if (!visited[j][i]) {
                             visited[j][i] = true;
@@ -524,7 +556,7 @@ bool preProcess() {
                         }
                     }
                 } else {
-                    // pintar a parte de baixo
+                    // pintar a parte da direita
                     for (int j = N - cb_copy[i]; j < N; j++) {
                         if (!visited[j][i]) {
                             visited[j][i] = true;
@@ -536,12 +568,55 @@ bool preProcess() {
         }
     }
 
+    // Caso onde ha menos pixeis pretos na coluna e existe uma linha preta
+    if (full_lin != -1) {
+        for (int i = 0; i < N; i++) {
+            if (ct_copy[i] == 1 && cb_copy[i] <= N / 2) {
+                if (full_lin + 1 > N / 2) {
+                    // pintar a parte de baixo
+                    for (int j = N - cb_copy[i]; j < N; j++) {
+                        if (!visited[j][i]) {
+                            visited[j][i] = true;
+                            update_pixel(j, i);
+                        }
+                    }
+                } else {
+                    // pintar a parte de cima
+                    for (int j = 0; j < cb_copy[i]; j++) {
+                        if (!visited[j][i]) {
+                            visited[j][i] = true;
+                            update_pixel(j, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Preto Branco Preto Branco nas colunas se N for impar
+    if (N % 2) {
+        for (int i = 0; i < N; i++) {
+            if (ct_copy[i] == N - 1) {
+                int j;
+                if (cb_copy[i] == N / 2) {
+                    j = 1; // 0 1 0 1 0
+                } else if (cb_copy[i] == N / 2 + 1) {
+                    j = 0; // 1 0 1 0 1
+                }
+                for (j; j < N; j += 2) {
+                    if (!visited[j][i]) {
+                        visited[j][i] = true;
+                        update_pixel(j, i);
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
 bool encode(int lin, int c) {
-
-    // VALID / INVALID ====================
 
     // Rejection test
     if (!verify_args(lin, c)) {
@@ -549,7 +624,7 @@ bool encode(int lin, int c) {
     }
 
     // Base case
-    if ((c == N || lb[lin] == 0) && lin == N - 1) {
+    if ((c == N || lb[lin] == 0) && lin >= N - 1) {
         if (final_verify()) {
             k++;
         }
@@ -558,6 +633,35 @@ bool encode(int lin, int c) {
     } else if (lb[lin] == 0 || c == N) {
         verify_row(lin) && encode(lin + 1, 0);
         return false;
+
+    } else if (lt_copy[lin] == N - 1) {
+        // 0 1 0 1 0 || 1 0 1 0 1
+        for (int j = 0; j < N; j += 2) {
+            if (!visited[lin][j]) {
+                // visited[lin][j] = true;
+                update_pixel(lin, j);
+            }
+        }
+        verify_row(lin) && encode(lin + 1, 0);
+        for (int j = 0; j < N; j += 2) {
+            if (!visited[lin][j]) {
+                revert_pixel(lin, j);
+            }
+        }
+
+        for (int j = 1; j < N; j += 2) {
+            if (!visited[lin][j]) {
+            // visited[lin][j] = true;
+            update_pixel(lin, j);
+            }
+        }
+        verify_row(lin) && encode(lin + 1, 0);
+        for (int j = 1; j < N; j += 2) {
+            if (!visited[lin][j]) {
+                // visited[lin][j] = false;
+                revert_pixel(lin, j);
+            }
+        }
 
     } else {
         // For all unvisited pixels
@@ -649,6 +753,7 @@ int main() {
         // Cria um vetor N*N
         QRcode = vector<vector<int>>(N, (vector<int>(N, 0)));
         visited = vector<vector<bool>>(N, (vector<bool>(N, false)));
+        lt_copy = lt;
 
         k = 0;
 
