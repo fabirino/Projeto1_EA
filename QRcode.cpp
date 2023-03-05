@@ -165,9 +165,9 @@ void update_pixel(int l, int c) {
         }
     } else if (l == 0 && QRcode[l + 1][c] == 0) { // primeiro
         ct[c]--;
-    }  else if (l == 0 && QRcode[l + 1][c] == 1) { // primeiro
+    } else if (l == 0 && QRcode[l + 1][c] == 1) { // primeiro
         ct[c]++;
-    }else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
+    } else if (l == N - 1 && QRcode[l - 1][c] == 0) { // ultima
         ct[c]--;
     } else if (l == N - 1 && QRcode[l - 1][c] == 1) { // ultima
         ct[c]++;
@@ -184,7 +184,7 @@ void update_pixel(int l, int c) {
         lt[l]--;
     } else if (c == 0 && QRcode[l][c + 1] == 1) { // primeiro
         lt[l]++;
-    }else if (c == N - 1 && QRcode[l][c - 1] == 0) { // primeiro
+    } else if (c == N - 1 && QRcode[l][c - 1] == 0) { // primeiro
         lt[l]--;
     } else if (c == N - 1 && QRcode[l][c - 1] == 1) { // ultima
         lt[l]++;
@@ -292,7 +292,7 @@ void revert_pixel(int l, int c) {
 bool preProcess() {
 
     // INVALID =====================================================
-    
+
     // Verficar se a contagem de pixeis nas linhas concide com a contagem de pixeis nas colunas e quadrantes
     int sum_lb = 0;
     int sum_cb = 0;
@@ -303,29 +303,29 @@ bool preProcess() {
         if (lb[i] > N || cb[i] > N)
             return false;
     }
-    if(qb[0] > (N/2*(N-N/2))){ 
-        return false ;
+    if (qb[0] > (N / 2 * (N - N / 2))) {
+        return false;
     }
-    if(qb[1] > (N/2*N/2)){
-        return false ;
+    if (qb[1] > (N / 2 * N / 2)) {
+        return false;
     }
-    if(qb[2] > (N/2*(N-N/2))){
-        return false ;
+    if (qb[2] > (N / 2 * (N - N / 2))) {
+        return false;
     }
-    if(qb[3] > ((N-N/2)*(N-N/2))){
-        return false ;
+    if (qb[3] > ((N - N / 2) * (N - N / 2))) {
+        return false;
     }
 
     for (int i = 0; i < 4; i++) {
         sum_qb += qb[i];
     }
-    if (sum_lb != sum_cb ||  sum_cb != sum_qb)
+    if (sum_lb != sum_cb || sum_cb != sum_qb)
         return false;
 
     // TODO: Transicoes impossiveis(nao haver conjucacao entre transicoes e no cel pretas)
 
     // VALID =====================================================
-    
+
     vector<int> lb_copy = lb;
     vector<int> cb_copy = cb;
     vector<int> lt_copy = lt;
@@ -337,8 +337,8 @@ bool preProcess() {
     int soma = (N / 2) * ((N + 1) / 2);
     // 1Q
     if (qb_copy[0] == soma) {
-        for (int i = 0; i < N/2; i++) {
-            for (int j = N/2; j < N; j++) {
+        for (int i = 0; i < N / 2; i++) {
+            for (int j = N / 2; j < N; j++) {
                 if (!visited[i][j]) {
                     visited[i][j] = true;
                     update_pixel(i, j);
@@ -346,8 +346,8 @@ bool preProcess() {
             }
         }
     } else if (qb[0] == 0) {
-        for (int i = 0; i < N/2; i++) {
-            for (int j = N/2; j < N; j++) {
+        for (int i = 0; i < N / 2; i++) {
+            for (int j = N / 2; j < N; j++) {
                 if (!visited[i][j])
                     visited[i][j] = true;
             }
@@ -413,6 +413,8 @@ bool preProcess() {
     }
 
     // Preencher linhas/ colunas completas
+    int empty_lin = -1;
+    int empty_col = -1;
     for (int i = 0; i < N; i++) {
         // linhas
         if (lb_copy[i] == N) {
@@ -425,6 +427,7 @@ bool preProcess() {
                 }
             }
         } else if (lb_copy[i] == 0) {
+            empty_lin = i;
             if (lt_copy[i] != 0)
                 return false;
             for (int j = 0; j < N; j++)
@@ -443,6 +446,7 @@ bool preProcess() {
                 }
             }
         } else if (cb_copy[i] == 0) {
+            empty_col = i;
             if (ct_copy[i] != 0)
                 return false;
             for (int j = 0; j < N; j++)
@@ -480,11 +484,63 @@ bool preProcess() {
         }
     }
 
+    // Pintar linhas que so tenham uma transicao
+    // Caso onde ha mais pixeis na linha e existe uma coluna branca
+    if (empty_col != -1) {
+        for (int i = 0; i < N; i++) {
+            if (lt[i] == 1 && lb_copy[i] >= N / 2) {
+                if (empty_col + 1 > N / 2) {
+                    // pintar a parte de cima
+                    for (int j = 0; j < lb_copy[i]; j++) {
+                        if (!visited[i][j]) {
+                            visited[i][j] = true;
+                            update_pixel(i, j);
+                        }
+                    }
+                } else {
+                    // pintar a parte de baixo
+                    for (int j = N - lb_copy[i]; j < N; j++) {
+                        if (!visited[i][j]) {
+                            visited[i][j] = true;
+                            update_pixel(i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Pintar colunas que so tenham uma transicao
+    // Caso onde ha mais pixeis na coluna e existe uma linha branca
+    if (empty_lin != -1) {
+        for (int i = 0; i < N; i++) {
+            if (ct[i] == 1 && cb_copy[i] >= N / 2) {
+                if (empty_lin + 1 > N / 2) {
+                    // pintar a parte de cima
+                    for (int j = 0; j < cb_copy[i]; j++) {
+                        if (!visited[j][i]) {
+                            visited[j][i] = true;
+                            update_pixel(j, i);
+                        }
+                    }
+                } else {
+                    // pintar a parte de baixo
+                    for (int j = N - cb_copy[i]; j < N; j++) {
+                        if (!visited[j][i]) {
+                            visited[j][i] = true;
+                            update_pixel(j, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
 bool encode(int lin, int c) {
-    
+
     // VALID / INVALID ====================
 
     // Rejection test
