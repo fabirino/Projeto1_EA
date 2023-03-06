@@ -145,6 +145,7 @@ bool final_verify() {
             return false;
     }
 
+    k++;
     QRcodecpy = QRcode;
     return true;
 }
@@ -300,7 +301,7 @@ bool preProcess() {
     for (int i = 0; i < N; i++) {
         sum_lb += lb[i];
         sum_cb += cb[i];
-        if (lb[i] > N || cb[i] > N)
+        if (lb[i] > N || cb[i] > N || lt[i] > N-1 || ct[i] > N-1 || lt[i] > 2*lb[i] || ct[i] > 2*cb[i])
             return false;
     }
     if (qb[0] > (N / 2 * (N - N / 2))) {
@@ -621,11 +622,11 @@ bool encode(int lin, int c) {
 
     // Base case
     if ((c == N || lb[lin] == 0) && lin >= N - 1) {
-        if (final_verify()) {
-            k++;
-        }
+        final_verify();
         return false;
-
+    } else if (lin > N - 1) {
+        final_verify();
+        return false;
     } else if (lb[lin] == 0 || c == N) {
         verify_row(lin) && encode(lin + 1, 0);
         return false;
@@ -703,7 +704,6 @@ bool encode(int lin, int c) {
                 verify_row(lin) && encode(lin + 1, 0);
                 return false;
             } else if (lin == N - 1 && i == N - 1 && final_verify()) {
-                k++;
                 return false;
             }
         }
@@ -786,7 +786,7 @@ int main() {
 
         if (preProcess()) {
             // printQRcode(QRcode, N);
-            encode(0, 0);
+            !final_verify() && encode(0, 0);
         }
 
         // Output =================================================
