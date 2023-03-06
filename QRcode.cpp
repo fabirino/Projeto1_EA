@@ -7,7 +7,7 @@ using namespace std;
 vector<vector<int>> QRcode;
 vector<vector<int>> QRcodecpy;
 
-vector<int> lb, cb, lt, ct, qb, db, lt_copy;
+vector<int> lb, cb, lt, ct, qb, db, lt_copy, lb_copy;
 vector<vector<bool>> visited;
 int k; // usar para o num de QRcodes gerados a partir do input
 int N; // num linhas/ colunas do QRcode
@@ -324,12 +324,8 @@ bool preProcess() {
 
     // TODO: Transicoes impossiveis(nao haver conjucacao entre transicoes e no cel pretas)
 
-
-
-
     // VALID =====================================================
 
-    vector<int> lb_copy = lb;
     vector<int> cb_copy = cb;
     vector<int> ct_copy = ct;
     vector<int> db_copy = db;
@@ -634,6 +630,34 @@ bool encode(int lin, int c) {
         verify_row(lin) && encode(lin + 1, 0);
         return false;
 
+    } else if (lt_copy[lin] == 1) {
+        // pintar todas as celulas a direita ou a esquerda!!
+        for (int i = 0; i < lb_copy[lin]; i++) {
+            if (!visited[lin][i]) {
+                update_pixel(lin, i);
+            }
+        }
+        verify_row(lin) && encode(lin + 1, 0);
+        // reverter os que pintei!
+        for (int i = 0; i < lb_copy[lin]; i++) {
+            if (!visited[lin][i]) {
+                revert_pixel(lin, i);
+            }
+        }
+        for (int i = 1; i < lb_copy[lin] + 1; i++) {
+            if (!visited[lin][N - i]) {
+                update_pixel(lin, N - i);
+            }
+        }
+        verify_row(lin) && encode(lin + 1, 0);
+        // reverter os que pintei!
+        for (int i = 1; i < lb_copy[lin] + 1; i++) {
+            if (!visited[lin][N - i]) {
+                revert_pixel(lin, N - i);
+            }
+        }
+
+        return false;
     } else if (lt_copy[lin] == N - 1) {
         // 0 1 0 1 0 || 1 0 1 0 1
         for (int j = 0; j < N; j += 2) {
@@ -651,8 +675,8 @@ bool encode(int lin, int c) {
 
         for (int j = 1; j < N; j += 2) {
             if (!visited[lin][j]) {
-            // visited[lin][j] = true;
-            update_pixel(lin, j);
+                // visited[lin][j] = true;
+                update_pixel(lin, j);
             }
         }
         verify_row(lin) && encode(lin + 1, 0);
@@ -662,7 +686,7 @@ bool encode(int lin, int c) {
                 revert_pixel(lin, j);
             }
         }
-
+        return false;
     } else {
         // For all unvisited pixels
         for (int i = c; i < N; i++) {
@@ -727,6 +751,8 @@ void printQRcode(vector<vector<int>> QRcode, int N) {
 }
 
 int main() {
+    std::ios_base::sync_with_stdio(0);
+    std::cin.tie(0);
     int num_codes;
     cin >> num_codes;
 
@@ -754,6 +780,7 @@ int main() {
         QRcode = vector<vector<int>>(N, (vector<int>(N, 0)));
         visited = vector<vector<bool>>(N, (vector<bool>(N, false)));
         lt_copy = lt;
+        lb_copy = lb;
 
         k = 0;
 
@@ -762,7 +789,7 @@ int main() {
             encode(0, 0);
         }
 
-        // Output ===============================================
+        // Output =================================================
         switch (k) {
         case 0:
             cout << "DEFECT: No QR Code generated!" << endl;
