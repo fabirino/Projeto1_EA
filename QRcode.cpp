@@ -301,7 +301,7 @@ bool preProcess() {
     for (int i = 0; i < N; i++) {
         sum_lb += lb[i];
         sum_cb += cb[i];
-        if (lb[i] > N || cb[i] > N || lt[i] > N-1 || ct[i] > N-1 || lt[i] > 2*lb[i] || ct[i] > 2*cb[i])
+        if (lb[i] > N || cb[i] > N || lt[i] > N - 1 || ct[i] > N - 1 || lt[i] > 2 * lb[i] || ct[i] > 2 * cb[i])
             return false;
     }
     if (qb[0] > (N / 2 * (N - N / 2))) {
@@ -321,6 +321,25 @@ bool preProcess() {
         sum_qb += qb[i];
     }
     if (sum_lb != sum_cb || sum_cb != sum_qb)
+        return false;
+
+    // Verificar se o no de pixeis de metade das linhas coincide com o numero de pixeis desses quadrantes
+    // 1Q e 2Q e metade de cima das linhas
+    int soma1 = 0;
+    int soma2 = 0;
+    int soma3 = 0;
+    int soma4 = 0;
+    for (int i = 0; i < N; i++) {
+        if (i < N / 2) {
+            soma1 += lb[i];
+            soma3 += cb[i];
+
+        } else {
+            soma2 += lb[i];
+            soma4 += cb[i];
+        }
+    }
+    if (soma1 != qb[0] + qb[1] || soma2 != qb[2] + qb[3]|| soma3 != qb[1]+qb[2] || soma4 != qb[0]+qb[3])
         return false;
 
     // TODO: Transicoes impossiveis(nao haver conjucacao entre transicoes e no cel pretas)
