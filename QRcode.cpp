@@ -70,16 +70,11 @@ bool verify_quadrants() {
 }
 
 bool verify_args(int lin, int c) {
-
-    if (N != c && ((N - c) < lb[lin]) || ((N - lin) < cb[c])) { // deve de dar para otimizar mai qq cena so ns como xd !!
-        return false;
-    }
-
-    // for (int i = 0; i < N; i++) {
-    //     if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] != 0) || (lb[i] == 0 && lt[i] != 0) || ct[i] < -1 || lt[i] < -1) {
-    //         return false;
-    //     }
+    // TODO:
+    // if (N - c + 1 < lb[lin] || (N - lin + 1 < cb[c])) {
+    //     return false;
     // }
+
     for (int i = 0; i < N; i++) {
         if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] != 0) || (lb[i] == 0 && lt[i] != 0)) {
             return false;
@@ -99,7 +94,7 @@ bool verify_args(int lin, int c) {
     return true;
 }
 
-bool verify_row(int lin) { // TODO: verificar quadrantes !
+bool verify_row(int lin) {
     if (lb[lin] != 0 || lt[lin] != 0)
         return false;
     int soma = 0;
@@ -323,8 +318,7 @@ bool preProcess() {
     if (sum_lb != sum_cb || sum_cb != sum_qb)
         return false;
 
-    // Verificar se o no de pixeis de metade das linhas coincide com o numero de pixeis desses quadrantes
-    // 1Q e 2Q e metade de cima das linhas
+    // Verificar se o no de pixeis de metade das linhas/colunas coincide com o numero de pixeis desses quadrantes
     int soma1 = 0;
     int soma2 = 0;
     int soma3 = 0;
@@ -339,7 +333,11 @@ bool preProcess() {
             soma4 += cb[i];
         }
     }
-    if (soma1 != qb[0] + qb[1] || soma2 != qb[2] + qb[3]|| soma3 != qb[1]+qb[2] || soma4 != qb[0]+qb[3])
+    if (soma1 != qb[0] + qb[1] || soma2 != qb[2] + qb[3] || soma3 != qb[1] + qb[2] || soma4 != qb[0] + qb[3])
+        return false;
+
+    // Tam diagonais maior que os quadrante
+    if (qb[0] + qb[2] < db[1] || qb[1] + qb[3] < db[0])
         return false;
 
     // TODO: Transicoes impossiveis(nao haver conjucacao entre transicoes e no cel pretas)
