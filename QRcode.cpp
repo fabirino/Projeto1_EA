@@ -20,60 +20,27 @@ void writeVector(vector<int> &vec, int n) {
     }
 }
 
-// possivelmente nao funciona porque nada garante que os pixeis pretos de uma linha nao fiquem todos num so quadrante
-bool verify_quadrants() {
-    int soma = 0;
-    int size = lb.size();
-
-    // Quadrante 1 ======================================
-    for (int i = 0; i < size / 2; i++) {
-        soma += lb[i] / 2;
+bool verify_args(int lin, int c) {
+    
+    if (c < 1 || c == N || lin == N)
+        return true;
+    if (lb[lin] < 0 || cb[c - 1] < 0 || (cb[c - 1] == 0 && ct[c - 1] != 0) || (lb[lin] == 0 && lt[lin] != 0)) {
+        return false;
     }
 
-    if (soma > qb[0] || soma > qb[1])
-        return false;
-
-    soma = 0;
-    for (int i = size / 2; i < size; i++) {
-        soma += cb[i] / 2;
+    for (int i = 0; i < 4; i++) {
+        if (qb[i] < 0)
+            return false;
     }
 
-    if (soma > qb[0] || soma > qb[3])
-        return false;
-
-    // Quadrante 2 ======================================
-    // ja foi feito o caso das linhas
-
-    soma = 0;
-    for (int i = 0; i < size / 2; i++) {
-        soma += cb[i] / 2;
+    for (int i = 0; i < 2; i++) {
+        if (db[i] < 0)
+            return false;
     }
-
-    if (soma > qb[1] || soma > qb[2])
-        return false;
-
-    // Quadrante 3 ======================================
-    soma = 0;
-    for (int i = size / 2; i < size; i++) {
-        soma += lb[i] / 2;
-    }
-
-    if (soma > qb[2] || soma > qb[3])
-        return false;
-
-    // ja foi feito o caso das colunas
-
-    // Quadrante 4 ======================================
-    // ja foram feitos ambos os casos
 
     return true;
 }
-
-bool verify_args(int lin, int c) {
-    // TODO:
-    // if (N - c + 1 < lb[lin] || (N - lin + 1 < cb[c])) {
-    //     return false;
-    // }
+bool initial_verify() {
 
     for (int i = 0; i < N; i++) {
         if (lb[i] < 0 || cb[i] < 0 || (cb[i] == 0 && ct[i] != 0) || (lb[i] == 0 && lt[i] != 0)) {
@@ -630,6 +597,17 @@ bool preProcess() {
     return true;
 }
 
+bool verify_left(int line, int c){
+    int rowsleft = N - line;
+    int columnsleft = N - c;
+    if(cb[c] > rowsleft)
+        return false;
+    if(lb[line] > columnsleft)
+        return false;
+    
+    return true;
+}
+
 bool encode(int lin, int c) {
 
     // Rejection test
@@ -711,7 +689,7 @@ bool encode(int lin, int c) {
             if (!visited[lin][i]) {
                 visited[lin][i] = true;
                 update_pixel(lin, i);
-                encode(lin, i + 1);
+                verify_left(lin, i) && encode(lin, i + 1);
                 revert_pixel(lin, i);
                 visited[lin][i] = false;
             }
@@ -801,9 +779,9 @@ int main() {
 
         k = 0;
 
-        if (preProcess()) {
+        if (preProcess() && !final_verify()) {
             // printQRcode(QRcode, N);
-            !final_verify() && encode(0, 0);
+            initial_verify() && encode(0, 0);
         }
 
         // Output =================================================
